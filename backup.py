@@ -52,12 +52,17 @@ for db in list_db:
                  os.makedirs(directory)
              command = '/usr/bin/mysqldump --opt --hex-blob --force %s %s | gzip > %s' % (db, table, filename)
              os.system(command)
-             list_file.append(filename)
+
+        for file in os.listdir(directory):
+            if file.endswith(".sql.gz"):
+                list_file.append(file)
+
         if list_file:
              tar_name = "%s/%s/%s.tar" % (output_dir,db,db)
              tar = tarfile.open(tar_name, "w")
              for name in list_file:
-                 tar.add(name)
+                 full_path = "%s/%s" % (directory,name)
+                 tar.add(full_path, arcname=name)
              tar.close()
              md5_tar_name = md5Checksum(tar_name)
              object_name = "%s_%s/%s.tar" % (db,date_day,db)
@@ -67,7 +72,8 @@ for db in list_db:
              
 	     if md5_tar_name == remote_md5:
                  os.remove(tar_name)
-                 for sqlgz in list_file:
-                     os.remove(sqlgz)
+
+             for sqlgz in list_file:
+                 os.remove("%s/%s" % (directory,sqlgz))
     if con:
         con.close()
